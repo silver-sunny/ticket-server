@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kupstudio.bbarge.dao.dbProduct.product.ProductDao">
+
+    <insert id="insertProduct" parameterType="com.kupstudio.bbarge.entity.product.ProductEntity"
+            useGeneratedKeys="true"
+            keyProperty="productNo"
+            keyColumn="product_no">
+        INSERT INTO product
+        (
+            store_no,
+            product_name,
+            price,
+            discount_rate,
+            stock,
+            state_no,
+            pri,
+            pdi,
+            description,
+            create_at,
+            channel_no,
+            channel_product_id,
+            registrant
+        )VALUES (
+            #{storeNo},
+            #{productName},
+            #{price},
+            #{discountRate},
+            #{stock},
+            #{stateNo},
+            #{pri},
+            #{pdi},
+            #{description},
+            #{createAt},
+            #{channelNo},
+            #{channelProductId},
+            #{registrant}
+        )
+    </insert>
+
+    <select id="getProductDetail" resultType="com.kupstudio.bbarge.dto.product.ProductDto">
+        SELECT
+            store_no            AS storeNo,
+            product_no          AS productNo,
+            product_name        AS productName,
+            price               AS price,
+            discount_rate       AS discountRate,
+            stock               AS stock,
+            state_no            AS stateNo,
+            pri                 AS pri,
+            pdi                 AS pdi,
+            description         AS description,
+            create_at           AS createAt,
+            modify_at           AS modifyAt,
+            channel_no          AS channelNo,
+            channel_product_id  AS channelProductId,
+            registrant          AS registrant,
+            is_delete           AS isDelete
+        FROM
+            product
+        WHERE
+            product_no = #{productNo}
+    </select>
+
+    <select id="getTotal" resultType="int">
+        SELECT
+            count(*) AS total
+        FROM
+            product
+        <where>
+            <if test="adminStoreNos != null and adminStoreNos.size() > 0">
+                AND store_no IN
+                <foreach collection="adminStoreNos" item="storeNo" open="(" separator="," close=")">
+                    #{storeNo}
+                </foreach>
+            </if>
+            AND is_delete != TRUE
+        </where>
+    </select>
+
+    <select id="getProductList" resultType="com.kupstudio.bbarge.dto.product.ProductDto">
+        SELECT
+            store_no            AS storeNo,
+            product_no          AS productNo,
+            product_name        AS productName,
+            price               AS price,
+            discount_rate       AS discountRate,
+            stock               AS stock,
+            state_no            AS stateNo,
+            pri                 AS pri,
+            pdi                 AS pdi,
+            description         AS description,
+            create_at           AS createAt,
+            modify_at           AS modifyAt,
+            channel_no          AS channelNo,
+            channel_product_id  AS channelProductId,
+            registrant          AS registrant
+        FROM
+            product
+        <where>
+            <if test="adminStoreNos != null and adminStoreNos.size() > 0">
+                AND store_no IN
+                <foreach collection="adminStoreNos" item="storeNo" open="(" separator="," close=")">
+                    #{storeNo}
+                </foreach>
+            </if>
+            AND is_delete != TRUE
+        </where>
+        ORDER BY
+            create_at DESC
+        LIMIT #{offSet},#{countPerPage};
+    </select>
+
+    <update id="updateProduct" parameterType="com.kupstudio.bbarge.entity.product.ProductEntity">
+        UPDATE
+            product
+        <set>
+            product_name = #{productName},
+            price = #{price},
+            discount_rate = #{discountRate},
+            stock = #{stock},
+            state_no = #{stateNo},
+            pri = #{pri},
+            pdi = #{pdi},
+            description = #{description},
+            modify_at = #{modifyAt}
+        </set>
+        WHERE
+            product_no = #{productNo}
+        LIMIT 1;
+    </update>
+
+    <select id="isExistProductByStoreNo" resultType="boolean">
+        SELECT
+            COUNT(*)
+        FROM
+            product
+        WHERE
+            store_no = #{storeNo}
+        AND
+            is_delete != TRUE
+    </select>
+
+    <update id="updateProductToDelete" parameterType="int">
+        UPDATE
+            product
+        <set>
+            is_delete = TRUE
+        </set>
+        WHERE
+            product_no = #{productNo}
+        LIMIT 1;
+    </update>
+
+    <update id="updateProductStock">
+        UPDATE
+            product
+        <set>
+            <if test="productStateEnum != null and productStateEnum.name == 'OUTOFSTOCK'">
+                state_no = #{productStateEnum.stateNo},
+            </if>
+            stock = #{stock}
+        </set>
+        WHERE
+            product_no = #{productNo}
+        LIMIT 1;
+    </update>
+
+</mapper>

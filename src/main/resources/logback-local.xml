@@ -1,0 +1,16 @@
+<configuration>
+    <!-- MyBatis parameter logging -->
+    <logger name="org.apache.ibatis.logging.jdbc.BaseJdbcLogger" level="TRACE"/>
+    <logger name="com.example.mapper" level="DEBUG"/>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+<!--    <root level="DEBUG">-->
+<!--        <appender-ref ref="CONSOLE"/>-->
+<!--    </root>-->
+</configuration>

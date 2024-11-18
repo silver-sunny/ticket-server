@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kupstudio.bbarge.dao.dbAdmin.AdminStoreDao">
+
+
+
+    <select id="getAdminStoreListByAdminNo" resultType="int">
+        SELECT
+            store_no as storeNo
+        FROM
+            admin_store
+        WHERE
+            admin_no = #{adminNo}
+    </select>
+
+
+    <select id="getAdminStoreInfoListByAdminNo" resultType="com.kupstudio.bbarge.dto.admin.AdminStoreInfoDto">
+        SELECT
+            ads.store_no as storeNo,
+            s.store_name AS storeName
+        FROM
+            admin_store as ads
+        INNER JOIN
+            store as s
+        ON
+            ads.store_no = s.store_no
+        WHERE
+            ads.admin_no = #{adminNo}
+        ORDER BY
+            s.store_name ASC
+    </select>
+
+
+
+    <select id="getStoreAdminByStoreNo" resultType="com.kupstudio.bbarge.dto.admin.AdminStoreDto" parameterType="int">
+        SELECT
+            a.admin_no AS adminNo,
+            a.admin_id AS adminId,
+            #{storeNo} AS storeNo
+        FROM
+            admin AS a
+        INNER JOIN
+            admin_store AS s
+        ON
+            a.admin_no = s.admin_no
+        WHERE
+            s.store_no = #{storeNo}
+    </select>
+
+    <insert id="insertAdminStoreNoList" >
+        INSERT INTO admin_store
+        (
+        admin_no,
+        store_no
+        ) VALUES
+        <foreach collection="storeNoList" item="storeNo" index="index" separator=",">
+            (
+            #{adminNo},
+            #{storeNo}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteStoreNoListByAdminNo">
+        DELETE FROM
+            admin_store
+        WHERE
+            admin_no = #{adminNo};
+    </delete>
+
+    <delete id="deleteAdminNoListByStoreNo">
+        DELETE FROM
+            admin_store
+        WHERE
+            store_no = #{storeNo};
+    </delete>
+
+    <select id="isExitAdminStore" resultType="java.lang.Boolean">
+        SELECT
+            COUNT(*)
+        FROM
+            admin_store
+        WHERE
+            admin_no = #{adminNo}
+    </select>
+
+    <select id="getAdminListByStoreNo" resultType="int" >
+        SELECT
+            admin_no
+        FROM
+            admin_store
+        WHERE
+            store_no
+        IN (
+        <foreach collection="storeNoSet" item="storeNo" separator=",">
+            #{storeNo}
+        </foreach>
+        )
+    </select>
+
+    <select id="isExitAdminStoreByStoreNo" resultType="java.lang.Boolean">
+        SELECT
+            COUNT(*)
+        FROM
+            admin_store AS s
+        INNER JOIN
+            admin AS a
+        ON
+            s.admin_no = a.admin_no
+        WHERE
+            s.store_no = #{storeNo}
+        AND
+            a.is_delete != TRUE;
+    </select>
+
+    <select id="isExitAdminStoreByAdminNoAndStoreNo" resultType="java.lang.Boolean">
+        SELECT
+            COUNT(*)
+        FROM
+            admin_store AS s
+        WHERE
+            admin_no = #{adminNo}
+        AND
+            store_no = #{storeNo}
+    </select>
+
+</mapper>

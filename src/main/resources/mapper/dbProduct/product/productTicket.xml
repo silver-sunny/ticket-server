@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kupstudio.bbarge.dao.dbProduct.product.ProductTicketDao">
+
+    <sql id="defaultFilter">
+        <if test="detailedConditionEnum != null">
+            <choose>
+                <when test="detailedConditionEnum.name == 'PHONE_NUMBER'">
+                    AND phone_number = #{searchWord}
+                </when>
+                <when test="detailedConditionEnum.name == 'CHANNEL_ORDER_ID'">
+                    AND channel_order_id = #{searchWord}
+                </when>
+                <when test="detailedConditionEnum.name == 'ORDER_NO'">
+                    AND order_no = #{searchWord}
+                </when>
+            </choose>
+        </if>
+    </sql>
+
+    <select id="getProductTicketByTicketKey"  resultType="com.kupstudio.bbarge.entity.product.ProductTicketEntity">
+        SELECT
+            ticket_no           AS ticketNo,
+            ticket_key          AS ticketKey,
+            store_no            AS storeNo,
+            product_no          AS productNo,
+            phone_number        AS phoneNumber,
+            channel_no          AS channelNo,
+            purchase_at         AS purchaseAt,
+            create_at           AS createAt,
+            is_used             AS isUsed,
+            used_at             AS usedAt,
+            purchase_user_id    AS purchaseUserId,
+            price,
+            purchase_quantity   AS purchaseQuantity,
+            purchase_user_name  AS purchaseUserName,
+            direct_option       AS directOption,
+            order_no            AS orderNo
+        FROM
+            product_ticket
+        WHERE
+            ticket_key = #{ticketKey};
+    </select>
+
+    <select id="getProductTicketByTicketNo"  resultType="com.kupstudio.bbarge.dto.product.ProductTicketInfoDto">
+        SELECT
+            ticket_key          AS ticketKey,
+            store_no            AS storeNo,
+            product_no          AS productNo,
+            channel_no          AS channelNo,
+            purchase_at         AS purchaseAt,
+            phone_number        AS phoneNumber,
+            purchase_user_id    AS purchaseUserId,
+            is_used             AS isUsed,
+            price,
+            purchase_quantity   AS purchaseQuantity,
+            direct_option       AS directOption,
+            order_no            AS orderNo
+        FROM
+            product_ticket
+        WHERE
+            ticket_no = #{ticketNo};
+    </select>
+
+
+
+    <insert id="insertTicket">
+        INSERT INTO product_ticket
+        (
+            ticket_key,
+            store_no,
+            product_no,
+            phone_number,
+            channel_no,
+            purchase_at,
+            create_at,
+            purchase_user_id,
+            price,
+            purchase_quantity,
+            purchase_user_name,
+            direct_option,
+            order_no
+        ) VALUES (
+            #{ticketKey},
+            #{storeNo},
+            #{productNo},
+            #{phoneNumber},
+            #{channelNo},
+            #{purchaseAt},
+            #{createAt},
+            #{purchaseUserId},
+            #{price},
+            #{purchaseQuantity},
+            #{purchaseUserName},
+            #{directOption},
+            #{orderNo}
+        )
+    </insert>
+
+
+    <insert id="insertTicketList" parameterType="java.util.List">
+        INSERT INTO product_ticket
+        (
+            ticket_key,
+            store_no,
+            product_no,
+            phone_number,
+            channel_no,
+            purchase_at,
+            create_at,
+            purchase_user_id,
+            price,
+            purchase_quantity,
+            purchase_user_name,
+            direct_option,
+            order_no
+        ) VALUES 
+        <foreach collection="list" item="ticket"  separator=",">
+            (
+                 #{ticket.ticketKey},
+                 #{ticket.storeNo},
+                 #{ticket.productNo},
+                 #{ticket.phoneNumber},
+                 #{ticket.channelNo},
+                 #{ticket.purchaseAt},
+                 #{ticket.createAt},
+                 #{ticket.purchaseUserId},
+                 #{ticket.price},
+                 #{ticket.purchaseQuantity},
+                 #{ticket.purchaseUserName},
+                 #{ticket.directOption},
+                 #{ticket.orderNo}
+            )
+        </foreach>
+    </insert>
+
+
+    <update id="updateProductTicketUsed" parameterType="java.util.List">
+        UPDATE
+            product_ticket
+        <set>
+            is_used = 1,
+            used_at = NOW(),
+            admin_no = #{adminNo}
+        </set>
+        WHERE ticket_key IN
+        <foreach item="ticketKey" collection="ticketKeys" open="(" separator="," close=")">
+         #{ticketKey}
+        </foreach>
+    </update>
+
+    <select id="getTotal" resultType="int">
+        SELECT
+            count(*) AS total
+        FROM
+            product_ticket
+        <where>
+            <include refid="defaultFilter"/>
+        </where>
+    </select>
+
+    <select id="getProductTicketList" resultType="com.kupstudio.bbarge.entity.product.ProductTicketEntity">
+        SELECT
+            ticket_no           AS ticketNo,
+            ticket_key          AS ticketKey,
+            store_no            AS storeNo,
+            product_no          AS productNo,
+            phone_number        AS phoneNumber,
+            channel_no          AS channelNo,
+            purchase_at         AS purchaseAt,
+            create_at           AS createAt,
+            is_used             AS isUsed,
+            used_at             AS usedAt,
+            purchase_user_id    AS purchaseUserId,
+            price,
+            purchase_quantity   AS purchaseQuantity,
+            purchase_user_name  AS purchaseUserName,
+            direct_option       AS directOption,
+            order_no            AS orderNo
+        FROM
+            product_ticket
+        <where>
+            <include refid="defaultFilter"/>
+        </where>
+        ORDER BY
+            order_no DESC,
+            ticket_no DESC
+        LIMIT #{offSet},#{countPerPage};
+    </select>
+
+    <select id="getChannelOrderId" resultType="String">
+        SELECT
+            channel_order_id
+        FROM
+            product_ticket
+        WHERE
+            ticket_key = #{ticketKey}
+        LIMIT 1;
+    </select>
+
+    <select id="getTotalByTicketKeyAndOrderNo" resultType="int">
+        SELECT
+            count(*) AS total
+        FROM
+            product_ticket
+        WHERE
+            order_no = #{orderNo}
+    </select>
+
+    <select id="getProductTicketListByTicketKeyAndOrderNo" resultType="com.kupstudio.bbarge.entity.product.ProductTicketEntity">
+        SELECT
+            ticket_no           AS ticketNo,
+            ticket_key          AS ticketKey,
+            store_no            AS storeNo,
+            product_no          AS productNo,
+            phone_number        AS phoneNumber,
+            channel_no          AS channelNo,
+            purchase_at         AS purchaseAt,
+            create_at           AS createAt,
+            is_used             AS isUsed,
+            used_at             AS usedAt,
+            purchase_user_id    AS purchaseUserId,
+            price,
+            purchase_quantity   AS purchaseQuantity,
+            purchase_user_name  AS purchaseUserName,
+            direct_option       AS directOption,
+            order_no            AS orderNo
+        FROM
+            product_ticket
+        WHERE
+            ticket_key != #{ticketKey}
+        AND
+            order_no = #{orderNo}
+        ORDER BY
+            order_no DESC,
+            ticket_no DESC
+        LIMIT #{offSet},#{countPerPage};
+    </select>
+
+    <!-- is_used = 0 인 값이 하나도 없으면 true 반환 -->
+    <select id="isAllTicketByOrderUsed" resultType="boolean">
+        SELECT
+            count(*) = 0
+        FROM
+            product_ticket
+        WHERE
+            order_no = #{orderNo}
+        AND
+            is_used = 0
+    </select>
+
+    <delete id="deleteProductTicketByOrder">
+        DELETE FROM
+            product_ticket
+        WHERE
+            order_no = #{orderNo};
+    </delete>
+
+    <select id="getProductTicketListByOrderNo" resultType="com.kupstudio.bbarge.entity.product.ProductTicketEntity">
+        SELECT
+            ticket_no           AS ticketNo,
+            ticket_key          AS ticketKey,
+            store_no            AS storeNo,
+            product_no          AS productNo,
+            phone_number        AS phoneNumber,
+            channel_no          AS channelNo,
+            purchase_at         AS purchaseAt,
+            create_at           AS createAt,
+            is_used             AS isUsed,
+            used_at             AS usedAt,
+            purchase_user_id    AS purchaseUserId,
+            price,
+            purchase_quantity   AS purchaseQuantity,
+            purchase_user_name  AS purchaseUserName,
+            direct_option       AS directOption,
+            order_no            AS orderNo
+        FROM
+            product_ticket
+        WHERE
+            order_no = #{orderNo};
+    </select>
+
+    <select id="countProductTicketUsedByOrderNo" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            product_ticket
+        WHERE
+            order_no = #{orderNo}
+        AND
+            is_used = #{isUsed}
+    </select>
+
+</mapper>

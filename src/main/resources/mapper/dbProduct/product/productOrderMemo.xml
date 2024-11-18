@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kupstudio.bbarge.dao.dbProduct.product.ProductOrderMemoDao">
+
+    <insert id="insertMemo" parameterType="com.kupstudio.bbarge.dto.product.order.ProductOrderMemoDto">
+        INSERT INTO product_order_memo
+        (
+            order_no,
+            memo_no,
+            memo,
+            admin_id,
+            create_at
+        )
+        SELECT
+            #{orderNo},
+            COALESCE(MAX(memo_no), 0) + 1,
+            #{memo},
+            #{adminID},
+            NOW()
+        FROM
+            product_order_memo
+        WHERE
+            order_no = #{orderNo}
+        <selectKey keyProperty="memoNo" resultType="int" order="AFTER">
+            SELECT COALESCE(MAX(memo_no), 0) FROM product_order_memo WHERE order_no = #{orderNo}
+        </selectKey>
+    </insert>
+
+    <select id="getMemoList" parameterType="int" resultType="com.kupstudio.bbarge.dto.product.order.ProductOrderMemoDto">
+        SELECT
+            order_no    AS orderNo,
+            memo_no     AS memoNo,
+            memo        AS memo,
+            admin_id    AS adminID,
+            create_at   AS createAt,
+            modify_at   AS modifyAt
+        FROM
+            product_order_memo
+        WHERE
+            order_no = #{orderNo}
+        ORDER BY
+            create_at DESC
+    </select>
+
+    <select id="getMemoDetail" parameterType="int" resultType="com.kupstudio.bbarge.dto.product.order.ProductOrderMemoDto">
+        SELECT
+            order_no    AS orderNo,
+            memo_no     AS memoNo,
+            memo        AS memo,
+            admin_id    AS adminID,
+            create_at   AS createAt,
+            modify_at   AS modifyAt
+        FROM
+            product_order_memo
+        WHERE
+            order_no = #{orderNo}
+        AND
+            memo_no = #{memoNo}
+    </select>
+
+    <update id="updateMemo" parameterType="com.kupstudio.bbarge.dto.product.order.ProductOrderMemoDto">
+        UPDATE
+            product_order_memo
+        <set>
+            memo = #{memo},
+            modify_at = NOW()
+        </set>
+        WHERE
+            order_no = #{orderNo}
+        AND
+            memo_no = #{memoNo}
+        LIMIT 1;
+    </update>
+
+    <delete id="deleteMemo">
+        DELETE FROM
+            product_order_memo
+        WHERE
+            order_no = #{orderNo}
+        AND
+            memo_no = #{memoNo}
+        LIMIT 1;
+    </delete>
+
+
+</mapper>

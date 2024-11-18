@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kupstudio.bbarge.dao.dbProduct.product.ProductOrderDao">
+
+    <sql id="defaultFilter">
+        <if test="storeNo != null">
+            AND store_no = #{storeNo}
+        </if>
+        <if test="inquiryPeriodEnum != null">
+            <choose>
+                <when test="inquiryPeriodEnum.name == 'PURCHASE_AT'">
+                    AND purchase_at BETWEEN #{startDate} and #{endDate}
+                </when>
+                <when test="inquiryPeriodEnum.name == 'CANCEL_OR_RETURN_REQUEST_AT'">
+                    AND (
+                        (cancel_request_at IS NOT NULL AND cancel_request_at BETWEEN #{startDate} AND #{endDate})
+                        OR
+                        (return_request_at IS NOT NULL AND return_request_at BETWEEN #{startDate} AND #{endDate})
+                    )
+                </when>
+                <when test="inquiryPeriodEnum.name == 'REFUND_AT'">
+                    AND (
+                        (cancel_done_at IS NOT NULL AND cancel_done_at BETWEEN #{startDate} AND #{endDate})
+                        OR
+                        (return_done_at IS NOT NULL AND return_done_at BETWEEN #{startDate} AND #{endDate})
+                    )
+                </when>
+            </choose>
+        </if>
+        <if test="detailedConditionEnum != null">
+            <choose>
+                <when test="detailedConditionEnum.name == 'PHONE_NUMBER'">
+                    AND phone_number = #{searchWord}
+                </when>
+                <when test="detailedConditionEnum.name == 'PURCHASE_USER_NAME'">
+                    AND purchase_user_name = #{searchWord}
+                </when>
+                <when test="detailedConditionEnum.name == 'CHANNEL_ORDER_ID'">
+                    AND channel_order_id = #{searchWord}
+                </when>
+                <when test="detailedConditionEnum.name == 'ORDER_NO'">
+                    AND order_no = #{searchWord}
+                </when>
+                <when test="detailedConditionEnum.name == 'PRODUCT_NO'">
+                    AND product_no = #{searchWord}
+                </when>
+            </choose>
+        </if>
+        <if test="adminStoreNos != null and adminStoreNos.size() > 0">
+            AND store_no IN
+            <foreach collection="adminStoreNos" item="storeNo" open="(" separator="," close=")">
+                #{storeNo}
+            </foreach>
+        </if>
+    </sql>
+
+    <sql id="stateNoFilter">
+        <if test="orderStateNo != null">
+            AND order_state_no = #{orderStateNo}
+        </if>
+        <if test="isIssuance != null">
+            AND is_issuance = #{isIssuance}
+        </if>
+        <if test="cancelOrReturnStateNo != null">
+            AND cancel_or_return_state_no = #{cancelOrReturnStateNo}
+        </if>
+    </sql>
+
+    <sql id="orderStateNosFilter">
+        <if test="orderStateNos != null and orderStateNos.size() > 0">
+            AND order_state_no IN
+            <foreach collection="orderStateNos" item="stateNo" open="(" separator="," close=")">
+                #{stateNo}
+            </foreach>
+        </if>
+    </sql>
+
+    <sql id="cancelOrReturnStateNosFilter">
+        <if test="cancelOrReturnStateNos != null and cancelOrReturnStateNos.size() > 0">
+            AND cancel_or_return_state_no IN
+            <foreach collection="cancelOrReturnStateNos" item="stateNo" open="(" separator="," close=")">
+                #{stateNo}
+            </foreach>
+        </if>
+    </sql>
+
+    <insert id="insertOrder" parameterType="com.kupstudio.bbarge.entity.product.ProductOrderEntity"
+            useGeneratedKeys="true"
+            keyProperty="orderNo"
+            keyColumn="order_no">
+        INSERT INTO product_order
+        (
+            channel_no,
+            order_state_no,
+            store_no,
+            product_no,
+            purchase_at,
+            purchase_price,
+            purchase_quantity,
+            purchase_user_id,
+            phone_number,
+            create_at,
+            purchase_user_name,
+            direct_option
+        ) VALUE (
+            #{channelNo},
+            #{orderStateNo},
+            #{storeNo},
+            #{productNo},
+            #{purchaseAt},
+            #{purchasePrice},
+            #{purchaseQuantity},
+            #{purchaseUserId},
+            #{phoneNumber},
+            #{createAt},
+            #{purchaseUserName},
+            #{directOption}
+        )
+    </insert>
+
+    <select id="getOrder" parameterType="int" resultType="com.kupstudio.bbarge.entity.product.ProductOrderEntity">
+            SELECT
+                order_no                        AS orderNo,
+                channel_no                      AS channelNo,
+                channel_order_id                AS channelOrderId,
+                order_state_no                  AS orderStateNo,
+                cancel_or_return_state_no       AS cancelOrReturnStateNo,
+                store_no                        AS storeNo,
+                product_no                      AS productNo,
+                purchase_at                     AS purchaseAt,
+                purchase_price                  AS purchasePrice,
+                purchase_quantity               AS purchaseQuantity,
+                purchase_user_id                AS purchaseUserId,
+                purchase_user_name              AS purchaseUserName,
+                phone_number                    AS phoneNumber,
+                cancel_request_at               AS cancelRequestAt,
+                cancel_reject_at                AS cancelRejectAt,
+                cancel_done_at                  AS cancelDoneAt,
+                return_request_at               AS returnRequestAt,
+                return_reject_at                AS returnRejectAt,
+                return_done_at                  AS returnDoneAt,
+                create_at                       AS createAt,
+                modify_at                       AS modifyAt,
+                channel_product_order_id        AS channelProductOrderId,
+                cancel_or_return_reason         AS cancelOrReturnReason,
+                cancel_or_return_detail_reason  AS cancelOrReturnDetailReason,
+                cancel_or_return_requester      AS cancelOrReturnRequester,
+                is_progressing                  AS isProgressing,
+                direct_option                   AS directOption,
+                ticket_state_no                 AS ticketStateNo
+            FROM
+                product_order AS po
+            WHERE
+                order_no = #{orderNo}
+        </select>
+
+    <select id="getOrderDetail" parameterType="int" resultType="com.kupstudio.bbarge.dto.product.order.OrderDetailDto">
+        SELECT
+            order_no                     AS orderNo,
+            channel_order_id             AS channelOrderId,
+            channel_no                   AS channelNo,
+            channel_product_order_id     AS channelProductOrderId,
+            order_state_no               AS orderStateNo,
+            cancel_or_return_state_no    AS cancelOrReturnStateNo,
+            store_no                     AS storeNo,
+            product_no                   AS productNo,
+            purchase_quantity            AS purchaseQuantity,
+            purchase_user_name           AS purchaseUserName,
+            phone_number                 AS phoneNumber,
+            purchase_user_id             AS purchaseUserId,
+            direct_option                AS directOption,
+            ticket_state_no              AS ticketStateNo,
+            is_progressing               AS isProgressing
+        FROM
+            product_order AS po
+        WHERE
+            order_no = #{orderNo}
+    </select>
+
+    <select id="isExistOrderByOrderNo" parameterType="int" resultType="boolean">
+        SELECT
+            COUNT(*)
+        FROM
+            product_order
+        WHERE
+            order_no = #{orderNo}
+    </select>
+
+    <select id="isExistOrderByProductNo" parameterType="int" resultType="boolean">
+        SELECT
+            COUNT(*)
+        FROM
+            product_order
+        WHERE
+            product_no = #{productNo}
+    </select>
+
+    <select id="getAllOrderTotal" parameterType="com.kupstudio.bbarge.dto.product.order.OrderSearchDto" resultType="int">
+        SELECT
+            count(*) AS total
+        FROM
+            product_order
+        <where>
+            <include refid="defaultFilter"/>
+            <include refid="stateNoFilter"/>
+        </where>
+    </select>
+
+    <select id="getAllOrderList" parameterType="com.kupstudio.bbarge.dto.product.order.OrderSearchDto" resultType="com.kupstudio.bbarge.dto.product.order.OrderDto">
+        SELECT
+            order_no                     AS orderNo,
+            channel_no                   AS channelNo,
+            channel_order_id             AS channelOrderId,
+            channel_product_order_id     AS channelProductOrderId,
+            order_state_no               AS orderStateNo,
+            cancel_or_return_state_no    AS cancelOrReturnStateNo,
+            purchase_at                  AS purchaseAt,
+            store_no                     AS storeNo,
+            product_no                   AS productNo,
+            purchase_quantity            AS purchaseQuantity,
+            purchase_user_name           AS purchaseUserName,
+            phone_number                 AS phoneNumber,
+            purchase_user_id             AS purchaseUserId,
+            direct_option                AS directOption,
+            is_progressing               AS isProgressing,
+            is_issuance                  AS isIssuance
+        FROM
+            product_order AS po
+        <where>
+            <include refid="defaultFilter"/>
+            <include refid="stateNoFilter"/>
+        </where>
+        ORDER BY
+            order_no DESC
+        LIMIT #{offSet},#{countPerPage};
+    </select>
+
+    <select id="getOrderNonIssuedTicketTotal" parameterType="com.kupstudio.bbarge.dto.product.order.OrderSearchDto" resultType="int">
+        SELECT
+            count(*) AS total
+        FROM
+            product_order
+        <where>
+            <include refid="defaultFilter"/>
+            <include refid="stateNoFilter"/>
+            <include refid="orderStateNosFilter"/>
+            <include refid="cancelOrReturnStateNosFilter"/>
+        </where>
+    </select>
+
+    <select id="getOrderNonIssuedTicketList" parameterType="com.kupstudio.bbarge.dto.product.order.OrderSearchDto" resultType="com.kupstudio.bbarge.dto.product.order.OrderNonIssuedTicketDto">
+        SELECT
+            order_no                 AS orderNo,
+            channel_no               AS channelNo,
+            channel_order_id         AS channelOrderId,
+            channel_product_order_id AS channelProductOrderId,
+            order_state_no           AS orderStateNo,
+            purchase_at              AS purchaseAt,
+            shipping_due_date        AS shippingDueDate,
+            store_no                 AS storeNo,
+            product_no               AS productNo,
+            purchase_quantity        AS purchaseQuantity,
+            purchase_user_name       AS purchaseUserName,
+            phone_number             AS phoneNumber,
+            purchase_user_id         AS purchaseUserId,
+            direct_option            AS directOption,
+            ticket_state_no          AS ticketStateNo,
+            is_progressing           AS isProgressing,
+            is_issuance              AS isIssuance
+        FROM
+            product_order AS po
+        <where>
+            <include refid="defaultFilter"/>
+            <include refid="stateNoFilter"/>
+            <include refid="orderStateNosFilter"/>
+            <include refid="cancelOrReturnStateNosFilter"/>
+        </where>
+        ORDER BY
+            purchase_at DESC,
+            order_no DESC
+        LIMIT #{offSet},#{countPerPage};
+    </select>
+
+    <select id="getCancelOrReturnTotal" parameterType="com.kupstudio.bbarge.dto.product.order.OrderSearchDto" resultType="int">
+        SELECT
+            count(*) AS total
+        FROM
+            product_order
+        <where>
+            <include refid="defaultFilter"/>
+            <include refid="cancelOrReturnStateNosFilter"/>
+        </where>
+    </select>
+
+    <select id="getCancelOrReturnList" parameterType="com.kupstudio.bbarge.dto.product.order.OrderSearchDto" resultType="com.kupstudio.bbarge.dto.product.order.OrderCancelOrReturnDto">
+        SELECT
+            order_no                     AS orderNo,
+            channel_no                   AS channelNo,
+            channel_order_id             AS channelOrderId,
+            channel_product_order_id     AS channelProductOrderId,
+            order_state_no               AS orderStateNo,
+            cancel_or_return_state_no    AS cancelOrReturnStateNo,
+            cancel_or_return_reason      AS cancelOrReturnReason,
+            purchase_at                  AS purchaseAt,
+            store_no                     AS storeNo,
+            product_no                   AS productNo,
+            purchase_quantity            AS purchaseQuantity,
+            purchase_user_name           AS purchaseUserName,
+            phone_number                 AS phoneNumber,
+            purchase_user_id             AS purchaseUserId,
+            cancel_request_at            AS cancelRequestAt,
+            cancel_reject_at             AS cancelRejectAt,
+            cancel_done_at               AS cancelDoneAt,
+            return_request_at            AS returnRequestAt,
+            return_reject_at             AS returnRejectAt,
+            return_done_at               AS returnDoneAt,
+            direct_option                AS directOption,
+            is_progressing               AS isProgressing,
+            ticket_state_no              AS ticketStateNo,
+            is_issuance                  AS isIssuance
+        FROM
+            product_order AS po
+        <where>
+            <include refid="defaultFilter"/>
+            <include refid="cancelOrReturnStateNosFilter"/>
+        </where>
+        ORDER BY
+            CASE
+                WHEN cancel_or_return_state_no = #{cancelRequestStateNo} THEN cancel_request_at
+                WHEN cancel_or_return_state_no = #{returnRequestStateNo} THEN return_request_at
+                WHEN cancel_or_return_state_no = #{cancelDoneStateNo} THEN cancel_done_at
+                WHEN cancel_or_return_state_no = #{returnDoneStateNo} THEN return_done_at
+                ELSE NULL
+            END DESC,
+            order_no DESC
+        LIMIT #{offSet},#{countPerPage};
+    </select>
+
+    <select id="getCancelOrReturnTotalByStateNos" resultType="int">
+        SELECT
+            count(*) AS total
+        FROM
+            product_order
+        <where>
+            <include refid="cancelOrReturnStateNosFilter"/>
+            <if test="adminStoreNos != null and adminStoreNos.size() > 0">
+                AND store_no IN
+                <foreach collection="adminStoreNos" item="storeNo" open="(" separator="," close=")">
+                    #{storeNo}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+
+    <update id="updateProductOrderIsProgressing">
+        UPDATE
+            product_order
+        <set>
+            is_progressing = 1,
+            modify_at = NOW()
+        </set>
+        WHERE
+            channel_product_order_id = #{channelProductOrderId}
+        AND
+            channel_no = #{channelNo}
+        LIMIT 1;
+    </update>
+
+    <update id="updateProductOrderIsIssuance">
+        UPDATE
+            product_order
+        <set>
+            is_issuance = TRUE,
+            modify_at = NOW()
+        </set>
+        WHERE
+            order_no = #{orderNo}
+    </update>
+
+    <update id="updateProductOrderStateNo">
+        UPDATE
+            product_order
+        <set>
+            order_state_no = #{orderStateNo},
+            modify_at = NOW()
+        </set>
+        WHERE
+            order_no = #{orderNo}
+    </update>
+
+    <update id="updateProductOrderCancelOrReturnState">
+        UPDATE
+            product_order
+        <set>
+            cancel_or_return_state_no = #{cancelOrReturnStateNo},
+            cancel_or_return_reason = #{rejectReturnReason},
+            modify_at = NOW()
+        </set>
+        WHERE
+            order_no = #{orderNo}
+    </update>
+
+</mapper>

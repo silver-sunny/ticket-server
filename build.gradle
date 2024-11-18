@@ -1,0 +1,99 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.7.17'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+
+group = 'com.kupstudio'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '11'
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    testImplementation 'junit:junit:4.13.1'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.4'
+
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'org.slf4j:jcl-over-slf4j:1.7.25'
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+
+    // validation 추가
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // lombok 추가
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // https://mvnrepository.com/artifact/org.mindrot/jbcrypt
+    implementation 'org.mindrot:jbcrypt:0.4'
+
+    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui
+    //http://localhost:{port}/swagger-ui/index.html#/
+    implementation group: 'org.springdoc', name: 'springdoc-openapi-ui', version: '1.6.6'
+
+    implementation group: 'com.vdurmont', name: 'emoji-java', version: '5.1.1'
+
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.2'
+
+    // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk
+    implementation group: 'com.amazonaws', name: 'aws-java-sdk-s3', version: '1.11.238'
+
+
+    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
+
+    implementation 'com.google.code.gson:gson:2.8.9' // Use the latest version available
+
+}
+
+// this shouldn't be necessary as there are no real duplicates
+tasks {
+    processResources {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+}
+
+// jar build 할때 test 제외
+test {
+    exclude '**/*'
+    useJUnitPlatform()
+    systemProperty 'jasypt.encryptor.password', findProperty("jasypt.encryptor.password")
+}
+
+
+ext.profile = (!project.hasProperty('profile') || !profile) ? 'local' : profile
+
+
+// 리소스 폴더 지정
+sourceSets {
+    main {
+        resources {
+            srcDirs "src/main/resources", "src/main/resources-${profile}"
+        }
+    }
+}

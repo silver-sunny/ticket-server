@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kupstudio.bbarge.dao.dbUser.user.UserDao">
+
+    <select id="getUserInfo" parameterType="int" resultType="com.kupstudio.bbarge.dto.user.UserInfoDto">
+        SELECT
+            u.user_no       AS userNo,
+            ua.email        AS userId,
+            u.name          AS name,
+            u.nickname      AS nickName,
+            u.phone_number  AS phoneNumber
+        FROM
+            user AS u
+        LEFT JOIN
+            user_auth AS ua
+            ON u.user_no = ua.user_no
+        WHERE
+            u.user_no = #{userNo}
+    </select>
+
+</mapper>
